@@ -51,12 +51,12 @@ const (
 	// experience a sudden spike in popularity.
 	//
 	// True origin is http://archive.routeviews.org/route-views4/bgpdata.
-	ribDumpURI = "http://netmeta.net.gwdg.de:1080/v1/routeviews"
+	ribDumpURI = "https://netmeta-cache.leoluk.de/v1/routeviews"
 
 	// In order to resolve AS numbers to descriptions, we need data from every individual IRRs. Thankfully, someone else
 	// already did the hard work of aggregating them, and we can just fetch that (origin is
 	// https://bgp.potaroo.net/cidr/autnums.html, we cache it to avoid causing load).
-	autnumURI = "https://netmeta.net.gwdg.de/v1/autnums.html"
+	autnumURI = "https://netmeta-cache.leoluk.de/v1/autnums.html"
 )
 
 func init() {
