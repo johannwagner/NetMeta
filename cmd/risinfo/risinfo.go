@@ -12,6 +12,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"k8s.io/klog/v2"
 	"net/http"
 	"os"
 	"path"
@@ -21,8 +22,6 @@ import (
 
 	"github.com/osrg/gobgp/pkg/packet/bgp"
 	"github.com/osrg/gobgp/pkg/packet/mrt"
-
-	"k8s.io/klog/v2"
 )
 
 var (
@@ -32,6 +31,15 @@ var (
 
 	// Global cache write lock
 	mu sync.RWMutex
+
+	gwdgPrefixes = []string{
+		"2a06:93c0::/29",
+		"2a02:d480:700::/42",
+		"2001:638:60c::/46",
+		"2001:638:618::/48",
+		"::141.5.96.0/115",
+		"::134.76.0.0/112",
+	}
 )
 
 const (
@@ -43,12 +51,12 @@ const (
 	// experience a sudden spike in popularity.
 	//
 	// True origin is http://archive.routeviews.org/route-views4/bgpdata.
-	ribDumpURI = "https://netmeta-cache.leoluk.de/v1/routeviews"
+	ribDumpURI = "http://netmeta.net.gwdg.de:1080/v1/routeviews"
 
 	// In order to resolve AS numbers to descriptions, we need data from every individual IRRs. Thankfully, someone else
 	// already did the hard work of aggregating them, and we can just fetch that (origin is
 	// https://bgp.potaroo.net/cidr/autnums.html, we cache it to avoid causing load).
-	autnumURI = "https://netmeta-cache.leoluk.de/v1/autnums.html"
+	autnumURI = "https://netmeta.net.gwdg.de/v1/autnums.html"
 )
 
 func init() {
@@ -182,6 +190,18 @@ func parseMRT(r io.Reader) (map[string]uint32, error) {
 			}
 			prefix = body.Prefix.String()
 		default:
+			continue
+		}
+
+		hadOverride := false
+		for _, gwdgPrefix := range gwdgPrefixes {
+			if prefix == gwdgPrefix {
+				result[prefix] = 207592
+				hadOverride = true
+			}
+		}
+
+		if hadOverride {
 			continue
 		}
 
